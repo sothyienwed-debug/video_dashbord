@@ -1,4 +1,4 @@
-<script setup lang="ts">
+<script setup>
 const stats = [
   { label: 'Total Videos', value: '1,284', detail: '+24 this week' },
   { label: 'Categories', value: '18', detail: '6 featured' },

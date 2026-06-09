@@ -1,25 +1,16 @@
-<script setup lang="ts">
+<script setup>
 import { computed, ref, watch } from 'vue'
-import Sidebar from './components/Sidebar.vue'
-import Dashboard from './components/Dashboard.vue'
-import CategoryPage from './components/CategoryPage.vue'
-import UploadVideo from './components/UploadVideo.vue'
-import VideoList from './components/VideoList.vue'
-import UserPage from './components/UserPage.vue'
-import UserPermissionPage from './components/UserPermissionPage.vue'
-import PermissionPage from './components/PermissionPage.vue'
-import SettingPage from './components/SettingPage.vue'
+import { useRoute, useRouter } from 'vue-router'
+import Sidebar from '@/components/Sidebar.vue'
 
-type PageId = 'dashboard' | 'category' | 'upload' | 'list' | 'user' | 'userPermission' | 'permission' | 'setting'
-type ThemeId = 'light' | 'dark' | 'thai'
-
-const activePage = ref<PageId>('dashboard')
+const route = useRoute()
+const router = useRouter()
 const isSidebarOpen = ref(false)
 const isSidebarCollapsed = ref(false)
-const savedTheme = localStorage.getItem('teenth-theme') as ThemeId | null
-const theme = ref<ThemeId>(savedTheme ?? 'light')
+const savedTheme = localStorage.getItem('teenth-theme')
+const theme = ref(savedTheme || 'light')
 
-const pageTitles: Record<PageId, string> = {
+const pageTitles = {
   dashboard: 'Dashboard Admin',
   category: 'Category',
   upload: 'Upload Video',
@@ -30,10 +21,33 @@ const pageTitles: Record<PageId, string> = {
   setting: 'Setting',
 }
 
-const activeTitle = computed(() => pageTitles[activePage.value])
+const routeToPage = {
+  dashboard: 'dashboard',
+  videos: 'list',
+  'upload-video': 'upload',
+  categories: 'category',
+  users: 'user',
+  permissions: 'permission',
+  settings: 'setting',
+}
 
-const navigateTo = (page: string) => {
-  activePage.value = page as PageId
+const pageToPath = {
+  dashboard: '/',
+  category: '/categories',
+  upload: '/upload-video',
+  list: '/videos',
+  user: '/users',
+  userPermission: '/permissions',
+  permission: '/permissions',
+  setting: '/settings',
+}
+
+const isPublicRoute = computed(() => route.meta?.public === true)
+const activePage = computed(() => routeToPage[route.name] || 'dashboard')
+const activeTitle = computed(() => pageTitles[activePage.value] || 'Dashboard Admin')
+
+const navigateTo = async (page) => {
+  await router.push(pageToPath[page] || '/')
   isSidebarOpen.value = false
 }
 
@@ -48,7 +62,9 @@ watch(
 </script>
 
 <template>
-  <div class="min-h-screen bg-page text-textDark">
+  <router-view v-if="isPublicRoute" />
+
+  <div v-else class="min-h-screen bg-page text-textDark">
     <Sidebar
       :active-page="activePage"
       :is-open="isSidebarOpen"
@@ -81,14 +97,7 @@ watch(
       </header>
 
       <main class="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-        <Dashboard v-if="activePage === 'dashboard'" />
-        <CategoryPage v-else-if="activePage === 'category'" />
-        <UploadVideo v-else-if="activePage === 'upload'" />
-        <VideoList v-else-if="activePage === 'list'" />
-        <UserPage v-else-if="activePage === 'user'" />
-        <UserPermissionPage v-else-if="activePage === 'userPermission'" />
-        <PermissionPage v-else-if="activePage === 'permission'" />
-        <SettingPage v-else :theme="theme" @update-theme="theme = $event" />
+        <router-view />
       </main>
     </div>
   </div>

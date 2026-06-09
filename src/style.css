@@ -61,6 +61,10 @@
     background: rgb(var(--color-page));
   }
 
+  #app {
+    min-height: 100vh;
+  }
+
   button,
   input,
   select,
@@ -78,8 +82,17 @@
     @apply rounded-card border border-border bg-surface p-5 shadow-soft;
   }
 
-  .primary-button {
-    @apply inline-flex items-center justify-center rounded-lg bg-primaryBlue px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-primaryDark focus:outline-none focus:ring-4 focus:ring-primaryBlue/20;
+  .primary-button,
+  .btn-primary {
+    @apply inline-flex items-center justify-center rounded-lg bg-primaryBlue px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-primaryDark focus:outline-none focus:ring-4 focus:ring-primaryBlue/20 disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center rounded-lg border border-border bg-surface px-4 py-2.5 text-sm font-bold text-textDark transition hover:border-primaryBlue hover:text-primaryBlue focus:outline-none focus:ring-4 focus:ring-primaryBlue/10;
+  }
+
+  .btn-danger {
+    @apply inline-flex items-center justify-center rounded-lg border border-thaiRed/20 bg-thaiRed/10 px-3 py-2 text-sm font-bold text-thaiRed transition hover:bg-thaiRed hover:text-white focus:outline-none focus:ring-4 focus:ring-thaiRed/20;
   }
 
   .icon-button {
@@ -150,6 +163,10 @@
     @apply absolute -right-4 top-[5.5rem] z-50 h-9 w-9 items-center justify-center rounded-full border border-border bg-surface text-base font-extrabold leading-none text-primaryBlue shadow-soft ring-4 ring-page transition hover:-translate-y-0.5 hover:bg-primaryBlue hover:text-white focus:outline-none focus:ring-primaryBlue/20;
   }
 
+  .table-wrap {
+    @apply overflow-hidden rounded-card border border-border bg-surface shadow-soft;
+  }
+
   .admin-table {
     @apply w-full min-w-[1120px] text-left text-sm;
   }
@@ -170,179 +187,25 @@
     @apply inline-flex rounded-full bg-softPurple px-3 py-1 text-xs font-bold text-primaryBlue;
   }
 
-  .video-thumbnail {
-    @apply flex h-12 w-20 items-center justify-center rounded-lg text-sm font-extrabold ring-1 ring-border;
+  .form-label,
+  .form-field {
+    @apply block;
   }
 
-  .video-file-chip {
-    @apply inline-flex max-w-44 items-center truncate rounded-lg border border-border bg-surfaceMuted px-3 py-2 text-xs font-semibold text-muted;
+  .form-label,
+  .form-field span {
+    @apply text-sm font-bold text-textDark;
   }
 
-  .table-actions {
-    @apply flex flex-wrap items-center gap-2;
+  .form-input,
+  .form-field input,
+  .form-field select,
+  .form-field textarea {
+    @apply w-full rounded-lg border border-border bg-surface px-4 py-3 text-sm text-textDark outline-none transition placeholder:text-muted/60 focus:border-primaryBlue focus:ring-4 focus:ring-primaryBlue/10;
   }
 
-  .action-button {
-    @apply inline-flex min-w-16 items-center justify-center rounded-lg border px-3 py-1.5 text-xs font-bold transition focus:outline-none focus:ring-4;
-  }
-
-  .action-button-view {
-    @apply border-border bg-surfaceMuted text-textDark hover:border-primaryBlue hover:text-primaryBlue focus:ring-primaryBlue/10;
-  }
-
-  .action-button-edit {
-    @apply border-primaryBlue/20 bg-softPurple text-primaryBlue hover:bg-primaryBlue hover:text-white focus:ring-primaryBlue/20;
-  }
-
-  .action-button-delete {
-    @apply border-thaiRed/20 bg-thaiRed/10 text-thaiRed hover:bg-thaiRed hover:text-white focus:ring-thaiRed/20;
-  }
-
-  .permission-stat {
-    @apply rounded-lg border border-border bg-surfaceMuted px-4 py-3;
-  }
-
-  .permission-stat span {
-    @apply block text-xl font-extrabold text-primaryBlue;
-  }
-
-  .permission-stat p {
-    @apply mt-1 text-xs font-bold uppercase tracking-[0.12em] text-muted;
-  }
-
-  .permission-table,
-  .permission-user-table {
-    @apply w-full min-w-[1040px] text-left text-sm;
-  }
-
-  .permission-table thead,
-  .permission-user-table thead {
-    @apply bg-surfaceMuted text-xs uppercase tracking-[0.12em] text-muted;
-  }
-
-  .permission-table th,
-  .permission-user-table th {
-    @apply px-5 py-4 font-bold;
-  }
-
-  .permission-table td,
-  .permission-user-table td {
-    @apply border-t border-border px-5 py-4 text-textDark;
-  }
-
-  .permission-table th:not(:first-child),
-  .permission-table td:not(:first-child) {
-    @apply text-center;
-  }
-
-  .permission-mini-button {
-    @apply inline-flex rounded-lg border border-border bg-surface px-3 py-1 text-xs font-bold text-muted transition hover:border-primaryBlue hover:text-primaryBlue;
-  }
-
-  .permission-switch {
-    @apply inline-flex cursor-pointer items-center justify-center;
-  }
-
-  .permission-switch input,
-  .permission-status-toggle input {
-    @apply sr-only;
-  }
-
-  .permission-switch span {
-    @apply relative block h-7 w-12 rounded-full border border-border bg-surfaceMuted transition;
-  }
-
-  .permission-switch span::before {
-    content: '';
-    position: absolute;
-    left: 4px;
-    top: 4px;
-    height: 18px;
-    width: 18px;
-    border-radius: 9999px;
-    background: rgb(var(--color-surface));
-    box-shadow: 0 2px 8px rgb(23 16 51 / 0.18);
-    transition:
-      transform 180ms ease,
-      background 180ms ease;
-  }
-
-  .permission-switch input:checked + span {
-    border-color: rgb(var(--color-primary-blue) / 0.35);
-    background: rgb(var(--color-primary-blue));
-  }
-
-  .permission-switch input:checked + span::before {
-    transform: translateX(20px);
-  }
-
-  .permission-select {
-    @apply w-full min-w-36 rounded-lg border border-border bg-surface px-3 py-2 text-sm font-bold text-textDark outline-none transition focus:border-primaryBlue focus:ring-4 focus:ring-primaryBlue/10;
-  }
-
-  .permission-status-toggle {
-    @apply inline-flex cursor-pointer;
-  }
-
-  .permission-status-toggle span {
-    @apply inline-flex min-w-20 items-center justify-center rounded-full border border-thaiRed/20 bg-thaiRed/10 px-3 py-1.5 text-xs font-extrabold text-thaiRed transition;
-  }
-
-  .permission-status-toggle input:checked + span {
-    @apply border-emerald-200 bg-emerald-50 text-emerald-700;
-  }
-
-  .user-table {
-    @apply w-full min-w-[920px] text-left text-sm;
-  }
-
-  .user-table thead {
-    @apply bg-surfaceMuted text-xs uppercase tracking-[0.12em] text-muted;
-  }
-
-  .user-table th {
-    @apply px-5 py-4 font-bold;
-  }
-
-  .user-table td {
-    @apply border-t border-border px-5 py-4 text-textDark;
-  }
-
-  .password-viewer {
-    @apply flex w-fit items-center gap-2 rounded-lg border border-border bg-surfaceMuted p-1;
-  }
-
-  .password-viewer code {
-    @apply min-w-32 px-2 text-xs font-extrabold text-textDark;
-  }
-
-  .password-toggle {
-    @apply inline-flex items-center gap-1.5 rounded-md bg-surface px-3 py-1.5 text-xs font-bold text-primaryBlue ring-1 ring-border transition hover:bg-primaryBlue hover:text-white;
-  }
-
-  .password-toggle svg {
-    @apply h-4 w-4;
-  }
-
-  .password-toggle path {
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 1.9;
-    stroke-linecap: round;
-    stroke-linejoin: round;
-  }
-
-  .user-status-active,
-  .user-status-blocked {
-    @apply inline-flex min-w-20 items-center justify-center rounded-full px-3 py-1.5 text-xs font-extrabold;
-  }
-
-  .user-status-active {
-    @apply bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200;
-  }
-
-  .user-status-blocked {
-    @apply bg-thaiRed/10 text-thaiRed ring-1 ring-thaiRed/20;
+  .form-help {
+    @apply mt-2 block text-xs font-semibold text-muted;
   }
 
   .flow-step {
@@ -351,19 +214,5 @@
 
   .flow-step span {
     @apply flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primaryBlue text-sm font-extrabold text-white;
-  }
-
-  .form-field {
-    @apply block;
-  }
-
-  .form-field span {
-    @apply mb-2 block text-sm font-bold text-textDark;
-  }
-
-  .form-field input,
-  .form-field select,
-  .form-field textarea {
-    @apply w-full rounded-lg border border-border bg-surface px-4 py-3 text-sm text-textDark outline-none transition placeholder:text-muted/60 focus:border-primaryBlue focus:ring-4 focus:ring-primaryBlue/10;
   }
 }

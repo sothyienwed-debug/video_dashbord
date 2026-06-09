@@ -1,24 +1,37 @@
-<script setup lang="ts">
-import { ref } from 'vue'
+<script setup>
+import { ref, watch } from 'vue'
 
-const props = defineProps<{
-  activePage: string
-  isOpen: boolean
-  isCollapsed: boolean
-}>()
+const props = defineProps({
+  activePage: {
+    type: String,
+    required: true,
+  },
+  isOpen: {
+    type: Boolean,
+    default: false,
+  },
+  isCollapsed: {
+    type: Boolean,
+    default: false,
+  },
+})
 
-const emit = defineEmits<{
-  navigate: [page: string]
-  close: []
-  toggleCollapse: []
-}>()
+const emit = defineEmits(['navigate', 'close', 'toggle-collapse'])
 
 const isVideoOpen = ref(['upload', 'list'].includes(props.activePage))
 const isUserOpen = ref(['user', 'userPermission'].includes(props.activePage))
 
-const isActive = (page: string) => props.activePage === page
+watch(
+  () => props.activePage,
+  (page) => {
+    if (['upload', 'list'].includes(page)) isVideoOpen.value = true
+    if (['user', 'userPermission'].includes(page)) isUserOpen.value = true
+  },
+)
 
-const goTo = (page: string) => {
+const isActive = (page) => props.activePage === page
+
+const goTo = (page) => {
   emit('navigate', page)
 }
 </script>
@@ -41,7 +54,7 @@ const goTo = (page: string) => {
         type="button"
         class="sidebar-collapse-toggle hidden lg:flex"
         :aria-label="isCollapsed ? 'Open sidebar' : 'Close sidebar'"
-        @click="emit('toggleCollapse')"
+        @click="emit('toggle-collapse')"
       >
         {{ isCollapsed ? '>' : '<' }}
       </button>

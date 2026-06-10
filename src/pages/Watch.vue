@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import Navbar from '@/components/Navbar.vue'
 import VideoCard from '@/components/VideoCard.vue'
@@ -14,6 +14,7 @@ const props = defineProps({
 
 const router = useRouter()
 const videoStore = useVideoStore()
+const adOpened = ref(false)
 
 onMounted(() => {
   if (!videoStore.videos.length) {
@@ -30,6 +31,31 @@ const durationLabel = computed(() => {
   const seconds = String(secondsTotal % 60).padStart(2, '0')
   return `${minutes}:${seconds}`
 })
+
+const isHttpUrl = (value) => {
+  try {
+    const url = new URL(value)
+    return ['http:', 'https:'].includes(url.protocol)
+  } catch {
+    return false
+  }
+}
+
+const openPopupAd = () => {
+  const popupUrl = video.value?.popup_ads_url
+
+  if (adOpened.value || !popupUrl || !isHttpUrl(popupUrl)) return
+
+  window.open(popupUrl, '_blank', 'noopener,noreferrer')
+  adOpened.value = true
+}
+
+watch(
+  () => props.id,
+  () => {
+    adOpened.value = false
+  },
+)
 </script>
 
 <template>
@@ -50,9 +76,19 @@ const durationLabel = computed(() => {
         <div class="grid gap-8 lg:grid-cols-[1fr_22rem]">
           <article class="overflow-hidden rounded-card border border-gray-200 bg-white shadow-soft">
             <div class="aspect-video bg-gray-950">
-              <video v-if="video.videoUrl" class="h-full w-full" :src="video.videoUrl" controls />
-              <div v-else class="flex h-full w-full items-center justify-center text-sm font-semibold text-white">
-                {{ video.format?.toUpperCase() || 'VIDEO' }} preview
+              <video v-if="video.videoUrl" class="h-full w-full" :src="video.videoUrl" controls @play="openPopupAd" />
+              <div v-else class="flex h-full w-full flex-col items-center justify-center gap-4 text-sm font-semibold text-white">
+                <button
+                  type="button"
+                  class="flex h-16 w-16 items-center justify-center rounded-full bg-white text-2xl text-gray-950 shadow-lg transition hover:scale-105"
+                  aria-label="Play video"
+                  @click="openPopupAd"
+                >
+                  <svg class="ml-1 h-7 w-7" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M8 5v14l11-7L8 5Z" />
+                  </svg>
+                </button>
+                <span>{{ video.format?.toUpperCase() || 'VIDEO' }} preview</span>
               </div>
             </div>
 

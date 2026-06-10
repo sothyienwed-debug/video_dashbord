@@ -1,80 +1,50 @@
-const STORAGE_KEY = 'video-admin-categories'
+import api from './api'
 
-const seedCategories = [
-  { id: 1, name: 'Anime Series', slug: 'anime-series', status: 'active', permission: 'public', videoCount: 8 },
-  { id: 2, name: 'Movies', slug: 'movies', status: 'active', permission: 'public', videoCount: 5 },
-  { id: 3, name: 'Members Only', slug: 'members-only', status: 'inactive', permission: 'private', videoCount: 2 },
-]
+const unwrap = (response) => response.data?.data ?? response.data
 
-const slugify = (value) =>
-  value
-    .toString()
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/(^-|-$)+/g, '')
-
-const read = () => {
-  if (typeof localStorage === 'undefined') return seedCategories
-
-  const stored = localStorage.getItem(STORAGE_KEY)
-
-  if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seedCategories))
-    return seedCategories
-  }
-
-  try {
-    return JSON.parse(stored)
-  } catch {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seedCategories))
-    return seedCategories
-  }
+const collectionItems = (payload) => {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.data?.data)) return payload.data.data
+  return []
 }
 
-const write = (categories) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(categories))
-}
+const normalizeCategory = (category) => ({
+  ...category,
+  permission: category.permission || 'public',
+  videoCount: Number(category.video_count ?? category.videos_count ?? category.videoCount ?? 0),
+})
+
+const categoryPayload = (payload) => ({
+  name: payload.name.trim(),
+  description: payload.description || '',
+  status: payload.status,
+})
 
 export const categoryService = {
-  async list() {
-    return read()
+  async list(params = {}) {
+    const response = await api.get('/categories', {
+      params: {
+        status: params.status || undefined,
+      },
+    })
+
+    return collectionItems(unwrap(response)).map(normalizeCategory)
   },
 
   async create(payload) {
-    const categories = read()
-    const category = {
-      id: Date.now(),
-      name: payload.name.trim(),
-      slug: payload.slug?.trim() || slugify(payload.name),
-      status: payload.status,
-      permission: payload.permission,
-      videoCount: 0,
-    }
+    const response = await api.post('/categories', categoryPayload(payload))
 
-    write([category, ...categories])
-    return category
+    return normalizeCategory(unwrap(response))
   },
 
   async update(id, payload) {
-    const categories = read()
-    const nextCategories = categories.map((category) =>
-      category.id === id
-        ? {
-            ...category,
-            name: payload.name.trim(),
-            slug: payload.slug?.trim() || slugify(payload.name),
-            status: payload.status,
-            permission: payload.permission,
-          }
-        : category,
-    )
+    const response = await api.put(`/categories/${id}`, categoryPayload(payload))
 
-    write(nextCategories)
-    return nextCategories.find((category) => category.id === id)
+    return normalizeCategory(unwrap(response))
   },
 
   async remove(id) {
-    write(read().filter((category) => category.id !== id))
+    await api.delete(`/categories/${id}`)
   },
 }

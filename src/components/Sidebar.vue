@@ -16,7 +16,7 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['navigate', 'close', 'toggle-collapse'])
+const emit = defineEmits(['navigate', 'close', 'toggle-collapse', 'logout'])
 
 const isVideoOpen = ref(['upload', 'list'].includes(props.activePage))
 const isUserOpen = ref(['user', 'userPermission'].includes(props.activePage))
@@ -239,11 +239,28 @@ const goTo = (page) => {
         </button>
       </nav>
 
-      <div v-if="!isCollapsed" class="border-t border-border p-4">
-        <div class="rounded-lg bg-softPurple p-4">
+      <div class="border-t border-border p-4" :class="isCollapsed ? 'px-3' : ''">
+        <div v-if="!isCollapsed" class="mb-3 rounded-lg bg-softPurple p-4">
           <p class="text-sm font-bold text-primaryBlue">Admin Studio</p>
           <p class="mt-1 text-xs leading-5 text-muted">Manage video uploads, roles, and site settings.</p>
         </div>
+
+        <button
+          type="button"
+          class="sidebar-link text-thaiRed hover:bg-thaiRed/10 hover:text-thaiRed"
+          :class="isCollapsed ? 'justify-center px-0' : ''"
+          title="Logout"
+          @click="emit('logout')"
+        >
+          <span class="sidebar-icon text-thaiRed" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M10 17 15 12 10 7" />
+              <path d="M15 12H3" />
+              <path d="M14 4h4a3 3 0 0 1 3 3v10a3 3 0 0 1-3 3h-4" />
+            </svg>
+          </span>
+          <span v-if="!isCollapsed">Logout</span>
+        </button>
       </div>
     </aside>
   </div>

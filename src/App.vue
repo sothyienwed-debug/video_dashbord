@@ -2,9 +2,11 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import Sidebar from '@/components/Sidebar.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const route = useRoute()
 const router = useRouter()
+const authStore = useAuthStore()
 const isSidebarOpen = ref(false)
 const isSidebarCollapsed = ref(false)
 const savedTheme = localStorage.getItem('teenth-theme')
@@ -51,6 +53,12 @@ const navigateTo = async (page) => {
   isSidebarOpen.value = false
 }
 
+const logout = async () => {
+  await authStore.logout()
+  isSidebarOpen.value = false
+  await router.push({ name: 'login' })
+}
+
 watch(
   theme,
   (nextTheme) => {
@@ -72,6 +80,7 @@ watch(
       @navigate="navigateTo"
       @close="isSidebarOpen = false"
       @toggle-collapse="isSidebarCollapsed = !isSidebarCollapsed"
+      @logout="logout"
     />
 
     <div

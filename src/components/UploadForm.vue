@@ -15,6 +15,7 @@ const form = reactive({
   title: '',
   description: '',
   categoryId: '',
+  popup_ads_url: '',
   status: 'pending',
   videoFile: null,
   thumbnailFile: null,
@@ -49,6 +50,15 @@ onMounted(() => {
 const fileExtension = (file) => file?.name.split('.').pop()?.toLowerCase() || ''
 
 const isAllowedFile = (file, extensions) => extensions.includes(fileExtension(file))
+
+const isHttpUrl = (value) => {
+  try {
+    const url = new URL(value)
+    return ['http:', 'https:'].includes(url.protocol)
+  } catch {
+    return false
+  }
+}
 
 const readVideoDuration = (file) =>
   new Promise((resolve, reject) => {
@@ -144,6 +154,11 @@ const validateForm = () => {
   if (!form.title.trim()) errors.title = 'Title is required.'
   if (!form.description.trim()) errors.description = 'Description is required.'
   if (!form.categoryId) errors.categoryId = 'Category is required.'
+  if (!form.popup_ads_url.trim()) {
+    errors.popup_ads_url = 'Popup Ads Link is required.'
+  } else if (!isHttpUrl(form.popup_ads_url.trim())) {
+    errors.popup_ads_url = 'Popup Ads Link must start with http:// or https://.'
+  }
   if (!form.status) errors.status = 'Status is required.'
   if (!form.videoFile) errors.videoFile = 'Video file is required.'
   if (!form.thumbnailFile) errors.thumbnailFile = 'Thumbnail is required.'
@@ -156,6 +171,7 @@ const resetForm = () => {
   form.title = ''
   form.description = ''
   form.categoryId = ''
+  form.popup_ads_url = ''
   form.status = 'pending'
   form.videoFile = null
   form.thumbnailFile = null
@@ -220,6 +236,19 @@ const submit = async () => {
         Description
         <textarea v-model="form.description" class="form-input min-h-32 resize-y" placeholder="Video description" @input="clearError('description')" />
         <span v-if="errors.description" class="form-help text-admin-red">{{ errors.description }}</span>
+      </label>
+
+      <label class="form-label lg:col-span-2">
+        Popup Ads Link
+        <input
+          v-model="form.popup_ads_url"
+          class="form-input"
+          type="url"
+          placeholder="https://omg10.com/4/8089924"
+          @input="clearError('popup_ads_url')"
+        />
+        <span class="form-help">Field name: popup_ads_url</span>
+        <span v-if="errors.popup_ads_url" class="form-help text-admin-red">{{ errors.popup_ads_url }}</span>
       </label>
 
       <label class="form-label">

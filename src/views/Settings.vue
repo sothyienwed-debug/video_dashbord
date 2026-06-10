@@ -6,16 +6,18 @@ const authStore = useAuthStore()
 const saved = ref(false)
 
 const settings = reactive({
-  name: authStore.user.name,
-  email: authStore.user.email,
+  name: authStore.user?.name || '',
+  email: authStore.user?.email || '',
   siteName: 'Video Admin Dashboard',
   defaultStatus: 'pending',
   maxDuration: 10,
 })
 
 const save = () => {
-  authStore.user.name = settings.name
-  authStore.user.email = settings.email
+  authStore.updateProfile({
+    name: settings.name,
+    email: settings.email,
+  })
   saved.value = true
   window.setTimeout(() => {
     saved.value = false

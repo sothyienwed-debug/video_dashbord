@@ -1,135 +1,103 @@
-const STORAGE_KEY = 'video-admin-videos'
+import api from './api'
 
-const seedVideos = [
-  {
-    id: 101,
-    title: 'Spring Premiere Highlights',
-    description: 'Opening preview reel for the season.',
-    categoryId: 1,
-    categoryName: 'Anime Series',
-    status: 'published',
-    duration: 484,
-    format: 'mp4',
-    videoName: 'spring-premiere.mp4',
-    thumbnailName: 'spring-premiere.jpg',
-    thumbnailUrl: '',
-    size: '142 MB',
-    createdAt: '2026-06-08T09:20:00.000Z',
-    owner: 'Admin',
-  },
-  {
-    id: 102,
-    title: 'Midnight Feature Trailer',
-    description: 'Movie category upload waiting for review.',
-    categoryId: 2,
-    categoryName: 'Movies',
-    status: 'pending',
-    duration: 356,
-    format: 'webm',
-    videoName: 'midnight-feature.webm',
-    thumbnailName: 'midnight-feature.png',
-    thumbnailUrl: '',
-    size: '96 MB',
-    createdAt: '2026-06-07T14:05:00.000Z',
-    owner: 'Editor',
-  },
-  {
-    id: 103,
-    title: 'Private Bonus Episode',
-    description: 'Draft upload for private members.',
-    categoryId: 3,
-    categoryName: 'Members Only',
-    status: 'draft',
-    duration: 592,
-    format: 'mov',
-    videoName: 'bonus-episode.mov',
-    thumbnailName: 'bonus-episode.webp',
-    thumbnailUrl: '',
-    size: '188 MB',
-    createdAt: '2026-06-06T18:45:00.000Z',
-    owner: 'Admin',
-  },
-]
+const unwrap = (response) => response.data?.data ?? response.data
 
-const read = () => {
-  if (typeof localStorage === 'undefined') return seedVideos
-
-  const stored = localStorage.getItem(STORAGE_KEY)
-
-  if (!stored) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seedVideos))
-    return seedVideos
-  }
-
-  try {
-    return JSON.parse(stored)
-  } catch {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(seedVideos))
-    return seedVideos
-  }
+const collectionItems = (payload) => {
+  if (Array.isArray(payload)) return payload
+  if (Array.isArray(payload?.data)) return payload.data
+  if (Array.isArray(payload?.data?.data)) return payload.data.data
+  return []
 }
 
-const write = (videos) => {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(videos))
+const fileNameFromPath = (value) => {
+  if (!value) return ''
+
+  return String(value).split('/').pop() || ''
 }
 
-const formatSize = (file) => {
-  if (!file?.size) return '0 MB'
-  return `${(file.size / 1024 / 1024).toFixed(1)} MB`
+const fileExtension = (value) => fileNameFromPath(value).split('.').pop()?.toLowerCase() || ''
+
+const formatBytes = (value) => {
+  const bytes = Number(value || 0)
+
+  if (!bytes) return '0 MB'
+
+  return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
-const waitForProgress = (onProgress) =>
-  new Promise((resolve) => {
-    let progress = 0
-    const timer = window.setInterval(() => {
-      progress = Math.min(progress + 10 + Math.round(Math.random() * 12), 100)
-      onProgress?.(progress)
+const categoryName = (video) => {
+  if (typeof video.category === 'object' && video.category?.name) return video.category.name
+  if (typeof video.category === 'string') return video.category
 
-      if (progress >= 100) {
-        window.clearInterval(timer)
-        resolve()
-      }
-    }, 120)
-  })
+  return video.categoryName || 'Uncategorized'
+}
+
+const normalizeVideo = (video) => ({
+  ...video,
+  categoryId: Number(video.category_id ?? video.categoryId ?? 0),
+  categoryName: categoryName(video),
+  popup_ads_url: video.popup_ads_url || video.ad_link || '',
+  duration: Number(video.duration || 0),
+  format: fileExtension(video.video_file || video.video_url || video.videoName) || 'mp4',
+  videoName: fileNameFromPath(video.video_file || video.video_url) || video.videoName || 'video',
+  videoUrl: video.stream_full_url || video.compressed_video_full_url || video.video_url || '',
+  thumbnailName: fileNameFromPath(video.thumbnail || video.thumbnail_url) || video.thumbnailName || 'thumbnail',
+  thumbnailUrl: video.thumbnail_url || video.thumbnailUrl || '',
+  size: formatBytes(video.original_size || video.compressed_size),
+  createdAt: video.created_at || video.createdAt || new Date().toISOString(),
+  owner: video.owner || 'Admin',
+})
+
+const createFormData = (payload) => {
+  const formData = new FormData()
+
+  formData.append('title', payload.title.trim())
+  formData.append('description', payload.description.trim())
+  formData.append('category_id', String(payload.categoryId))
+  formData.append('status', payload.status)
+  formData.append('duration', String(Math.round(payload.duration || 0)))
+  formData.append('popup_ads_url', payload.popup_ads_url.trim())
+  formData.append('video_file', payload.videoFile)
+  formData.append('thumbnail', payload.thumbnailFile)
+
+  return formData
+}
 
 export const videoService = {
-  async list() {
-    return read().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+  async list(params = {}) {
+    const response = await api.get('/videos', {
+      params: {
+        per_page: params.per_page || 100,
+        status: params.status || undefined,
+        search: params.search || undefined,
+        sort: params.sort || undefined,
+      },
+    })
+
+    return collectionItems(unwrap(response)).map(normalizeVideo)
   },
 
   async create(payload, onProgress) {
-    await waitForProgress(onProgress)
+    const response = await api.post('/videos', createFormData(payload), {
+      onUploadProgress(event) {
+        if (!event.total) return
 
-    const videos = read()
-    const video = {
-      id: Date.now(),
-      title: payload.title.trim(),
-      description: payload.description.trim(),
-      categoryId: Number(payload.categoryId),
-      categoryName: payload.categoryName,
-      status: payload.status,
-      duration: Math.round(payload.duration),
-      format: payload.videoFile.name.split('.').pop()?.toLowerCase() || 'mp4',
-      videoName: payload.videoFile.name,
-      thumbnailName: payload.thumbnailFile.name,
-      thumbnailUrl: payload.thumbnailPreview || '',
-      size: formatSize(payload.videoFile),
-      createdAt: new Date().toISOString(),
-      owner: 'Admin',
-    }
+        onProgress?.(Math.round((event.loaded * 100) / event.total))
+      },
+    })
 
-    write([video, ...videos])
-    return video
+    onProgress?.(100)
+
+    return normalizeVideo(unwrap(response))
   },
 
   async updateStatus(id, status) {
-    const videos = read()
-    const nextVideos = videos.map((video) => (video.id === id ? { ...video, status } : video))
-    write(nextVideos)
-    return nextVideos.find((video) => video.id === id)
+    const response = await api.patch(`/videos/${id}`, { status })
+
+    return normalizeVideo(unwrap(response))
   },
 
   async remove(id) {
-    write(read().filter((video) => video.id !== id))
+    await api.delete(`/videos/${id}`)
   },
 }
